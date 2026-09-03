@@ -1,63 +1,69 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMotionValue, useTransform, useSpring, useMotionTemplate } from 'framer-motion'
 
-export default function Hero() {
-  const titleRef = useRef(null)
-  const subRef = useRef(null)
-  const ctaRef = useRef(null)
-  const heroRef = useRef(null)
+/**
+ * Komponen Hero dengan efek 3D Parallax
+ * Foto latar belakang akan bergerak mengikuti posisi mouse untuk efek kedalaman 3D
+ */
+export default function HeroSection() {
+  // Referensi untuk elemen-elemen yang akan dianimasikan
+  const titleRef = useRef(null)  // Judul utama
+  const subRef = useRef(null)    // Sub judul
+  const ctaRef = useRef(null)    // Tombol aksi
+  const heroRef = useRef(null)   // Container hero
 
-  // Mouse tracking values (relative to hero container)
+  // Nilai posisi mouse (relatif terhadap container hero, range 0-1)
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
 
-  // Initialize hasHover based on media query
+  // Deteksi apakah perangkat mendukung hover (desktop) atau tidak (mobile)
   const mediaQuery = typeof window !== 'undefined' ? window.matchMedia('(hover: hover) and (pointer: fine)') : null
   const [hasHover, setHasHover] = useState(mediaQuery?.matches ?? false)
 
-  useEffect(() => {
-    if (!mediaQuery) return
-    
-    const handleChange = (e) => setHasHover(e.matches)
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [mediaQuery])
-
-  // Spring configuration for smooth animation
+  // Konfigurasi spring animation untuk gerakan yang halus dan natural
+  // damping: kontrol bouncing (makin besar makin kaku)
+  // stiffness: kecepatan respon (makin besar makin cepat)
   const springConfig = { damping: 25, stiffness: 180, restDelta: 0.01 }
 
-  // Smoothed rotation values with springs
+  // Konversi posisi mouse menjadi rotasi 3D dengan efek spring (halus)
+  // mouseY 0-1 → rotateX 3° sampai -3°
   const rotateX = useSpring(
     useTransform(mouseY, [0, 1], [3, -3]),
     springConfig
   )
+  // mouseX 0-1 → rotateY -3° sampai 3°
   const rotateY = useSpring(
     useTransform(mouseX, [0, 1], [-3, 3]),
     springConfig
   )
 
-  // Parallax layers - different intensities for depth effect
+  // Layer parallax - setiap layer punya intensitas berbeda untuk efek kedalaman
+  // Layer paling belakang (foto): gerakan paling kecil (0.6x)
   const photoRotateX = useTransform(rotateX, (v) => `${v * 0.6}deg`)
   const photoRotateY = useTransform(rotateY, (v) => `${v * 0.6}deg`)
-  const photoTranslateZ = useMotionTemplate`-20px`
+  const photoTranslateZ = useMotionTemplate`-20px` // Posisi foto di belakang
 
+  // Layer tengah (overlay gelap): gerakan sedang (0.8x)
   const overlayRotateX = useTransform(rotateX, (v) => `${v * 0.8}deg`)
   const overlayRotateY = useTransform(rotateY, (v) => `${v * 0.8}deg`)
-  const overlayTranslateZ = useMotionTemplate`-10px`
+  const overlayTranslateZ = useMotionTemplate`-10px` // Posisi overlay di tengah
 
+  // Layer depan (teks): gerakan paling besar (1.2x) → terlihat lebih dekat
   const textRotateX = useTransform(rotateX, (v) => `${v * 1.2}deg`)
   const textRotateY = useTransform(rotateY, (v) => `${v * 1.2}deg`)
-  const textTranslateZ = useMotionTemplate`40px`
+  const textTranslateZ = useMotionTemplate`40px` // Posisi teks di depan
 
-  // Handle mouse movement relative to hero container
-  const handleMouseMove = (e) => {
+  // ===== FUNCTION UTAMA DALAM BAHASA INDONESIA =====
+
+  const pantauPerubahanHover = (e) => setHasHover(e.matches)
+
+  const hitungPosisiMouse = (e) => {
     if (!heroRef.current || !hasHover) return
 
     const rect = heroRef.current.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
 
-    // Calculate mouse position relative to center (0 to 1 range)
     const x = (e.clientX - centerX) / rect.width
     const y = (e.clientY - centerY) / rect.height
 
@@ -65,14 +71,12 @@ export default function Hero() {
     mouseY.set(y)
   }
 
-  // Reset to neutral position on mouse leave
-  const handleMouseLeave = () => {
+  const aturUlangPosisiMouse = () => {
     mouseX.set(0)
     mouseY.set(0)
   }
 
-  // Scroll-based parallax for mobile (fallback)
-  useEffect(() => {
+  const terapkanParallaksScroll = () => {
     if (hasHover) return
 
     const handleScroll = () => {
@@ -89,16 +93,31 @@ export default function Hero() {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [hasHover])
+  }
 
-  // Initial animation
-  useEffect(() => {
+  const animasiElemen = () => {
     const timer = setTimeout(() => {
       titleRef.current?.classList.add('visible')
       setTimeout(() => subRef.current?.classList.add('visible'), 200)
       setTimeout(() => ctaRef.current?.classList.add('visible'), 400)
     }, 150)
     return () => clearTimeout(timer)
+  }
+
+  // ===== HOOK EFFECTS =====
+
+  useEffect(() => {
+    if (!mediaQuery) return
+    mediaQuery.addEventListener('change', pantauPerubahanHover)
+    return () => mediaQuery.removeEventListener('change', pantauPerubahanHover)
+  }, [mediaQuery])
+
+  useEffect(() => {
+    return terapkanParallaksScroll()
+  }, [hasHover])
+
+  useEffect(() => {
+    return animasiElemen()
   }, [])
 
   return (
@@ -107,11 +126,12 @@ export default function Hero() {
       ref={heroRef}
       className="relative w-full min-h-screen flex items-end overflow-hidden perspective-container"
       aria-label="Hero"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={hitungPosisiMouse}
+      onMouseLeave={aturUlangPosisiMouse}
     >
-      {/* Background image layer (back) */}
+      {/* Layer gambar latar belakang (paling belakang) */}
       <div className="absolute inset-0 preserve-3d" style={{ transformStyle: 'preserve-3d' }}>
+        {/* Container gambar yang akan berputar 3D */}
         <div
           className="absolute inset-0 will-change-transform"
           style={{
@@ -119,7 +139,7 @@ export default function Hero() {
           }}
         >
           <img
-            src="/hero_interior.jpg"
+            src="/TogetherInMotion/hero_interior.jpg"
             alt="Interior Together In Motion"
             className="w-full h-full object-cover object-center"
             loading="eager"
@@ -127,7 +147,8 @@ export default function Hero() {
           />
         </div>
 
-        {/* Gradient overlay — warm dark from bottom (middle layer) */}
+        {/* Overlay gradasi gelap (layer tengah) */}
+        {/* Gradasi dari hitam pekat di bawah ke transparan di atas */}
         <div
           className="absolute inset-0 bg-gradient-to-t from-[#1a1410]/80 via-[#1a1410]/30 to-transparent will-change-transform"
           style={{
@@ -136,7 +157,7 @@ export default function Hero() {
         />
       </div>
 
-      {/* Content (front layer - appears to float above photo) */}
+      {/* Konten teks (layer paling depan - terlihat mengambang di atas foto) */}
       <div
         className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-24 md:pb-32 will-change-transform"
         style={{
@@ -167,6 +188,7 @@ export default function Hero() {
           ref={ctaRef}
           className="reveal reveal-delay-2 flex flex-wrap gap-4"
         >
+          {/* Tombol Lihat Menu */}
           <a
             id="hero-cta-menu"
             href="#menu"
@@ -174,6 +196,7 @@ export default function Hero() {
           >
             Lihat Menu
           </a>
+          {/* Tombol Chat WhatsApp */}
           <a
             id="hero-cta-whatsapp"
             href="https://wa.me/6288102634685"
@@ -186,19 +209,18 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Indikator scroll (panah ke bawah) */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
         <div className="w-px h-10 bg-[#faf6ef] animate-pulse" />
       </div>
 
-      {/* CSS for perspective and 3D */}
-
+      {/* CSS khusus untuk efek perspective 3D */}
       <style>{`
         .perspective-container {
-          perspective: 1000px;
+          perspective: 1000px; /* Jarak kamera ke layar */
         }
         .preserve-3d {
-          transform-style: preserve-3d;
+          transform-style: preserve-3d; /* Biarkan child elements tetap 3D */
         }
       `}</style>
     </section>

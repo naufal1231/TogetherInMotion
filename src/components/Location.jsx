@@ -1,14 +1,21 @@
-import { useScrollReveal } from '../hooks/useScrollReveal'
+import { gunakanScrollReveal } from '../hooks/useScrollReveal'
 
-const hours = [
+const jamBuka = [
   { day: 'Senin – Jumat', time: '09.00 – 23.00' },
   { day: 'Sabtu', time: '08.00 – 23.00' },
   { day: 'Minggu', time: '08.00 – 23.00' },
 ]
 
 export default function Location() {
-  const textRef = useScrollReveal()
-  const mapRef = useScrollReveal()
+  const textRef = gunakanScrollReveal()
+  const mapRef = gunakanScrollReveal()
+
+  const renderJam = (jam) => (
+    <li key={jam.day} className="flex justify-between items-center py-3 border-b border-[#d9cfc3]">
+      <span className="text-[#5a5650] font-light text-sm">{jam.day}</span>
+      <span className="text-[#1e1c1a] font-light text-sm tracking-wide">{jam.time}</span>
+    </li>
+  )
 
   return (
     <section
@@ -60,12 +67,7 @@ export default function Location() {
                 Jam Buka
               </p>
               <ul className="space-y-4">
-                {hours.map((h) => (
-                  <li key={h.day} className="flex justify-between items-center py-3 border-b border-[#d9cfc3]">
-                    <span className="text-[#5a5650] font-light text-sm">{h.day}</span>
-                    <span className="text-[#1e1c1a] font-light text-sm tracking-wide">{h.time}</span>
-                  </li>
-                ))}
+                {jamBuka.map(renderJam)}
               </ul>
               <p className="mt-5 text-[#9a948d] text-xs font-light">
                 * Jam buka bisa berubah saat hari libur nasional

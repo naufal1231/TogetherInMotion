@@ -1,8 +1,14 @@
-import { useScrollReveal } from '../hooks/useScrollReveal'
+import { gunakanScrollReveal } from '../hooks/useScrollReveal'
 
-export default function About() {
-  const textRef = useScrollReveal()
-  const imageRef = useScrollReveal()
+export default function Tentang() {
+  const textRef = gunakanScrollReveal()
+  const imageRef = gunakanScrollReveal()
+
+  const renderStatistik = () => [
+    { num: '2019', label: 'Berdiri' },
+    { num: '11+', label: 'Jam buka per hari' },
+    { num: '100%', label: 'Biji kopi lokal' },
+  ]
 
   return (
     <section
@@ -21,7 +27,7 @@ export default function About() {
           <div ref={imageRef} className="reveal order-2 md:order-1">
             <div className="relative">
               <img
-                src="/about_barista.jpg"
+                src="/TogetherInMotion/about_barista.jpg"
                 alt="Barista Together In Motion sedang menyeduh kopi"
                 className="w-full h-[480px] md:h-[560px] object-cover rounded-2xl"
                 loading="lazy"
@@ -52,11 +58,7 @@ export default function About() {
 
             {/* Small stats */}
             <div className="mt-12 grid grid-cols-3 gap-6 pt-10 border-t border-[#e8ddd0]">
-              {[
-                { num: '2019', label: 'Berdiri' },
-                { num: '11+', label: 'Jam buka per hari' },
-                { num: '100%', label: 'Biji kopi lokal' },
-              ].map((stat) => (
+              {renderStatistik().map((stat) => (
                 <div key={stat.label}>
                   <p className="font-serif font-light text-[#8a6a4f] text-2xl mb-1">{stat.num}</p>
                   <p className="text-[#9a948d] text-xs font-light">{stat.label}</p>
